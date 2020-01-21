@@ -14,7 +14,7 @@ static BOOL NVAHShouldDisableVolumeControl(void) {
 	id __block frontmostApp = nil;
 	SpringBoard * __block springboard = nil;
 	NVAHDispatchIfNecessary(^{
-		springboard = (id)UIApplication.sharedApplication;
+		springboard = (SpringBoard *)UIApplication.sharedApplication;
 		frontmostApp = [springboard _accessibilityFrontMostApplication];
 	});
 	if (frontmostApp || [springboard isLocked]) {
