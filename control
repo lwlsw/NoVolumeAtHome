@@ -1,7 +1,7 @@
 Package: com.pixelomer.nvah
 Name: NoVolumeAtHome
 Depends: mobilesubstrate
-Version: 1.0
+Version: 1.0.1
 Architecture: iphoneos-arm
 Description: Disable volume buttons on home screen
 Maintainer: PixelOmer

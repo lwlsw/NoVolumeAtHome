@@ -5,22 +5,40 @@
 - (id)_accessibilityFrontMostApplication;
 @end
 
-static void NVAHVolumeHook(id self, SEL _cmd, id arg1, IMP orig) {
-	SpringBoard *springboard = (id)UIApplication.sharedApplication;
-	id frontmostApp = [springboard _accessibilityFrontMostApplication];
+static void NVAHDispatchIfNecessary(void(^block)(void)) {
+	if ([NSThread isMainThread]) block();
+	else dispatch_sync(dispatch_get_main_queue(), block);
+}
+
+static BOOL NVAHShouldDisableVolumeControl(void) {
+	id __block frontmostApp = nil;
+	SpringBoard * __block springboard = nil;
+	NVAHDispatchIfNecessary(^{
+		springboard = (id)UIApplication.sharedApplication;
+		frontmostApp = [springboard _accessibilityFrontMostApplication];
+	});
 	if (frontmostApp || [springboard isLocked]) {
-		((void(*)(id,SEL,id))orig)(self, _cmd, arg1);
+		return NO;
 	}
+	return YES;
 }
 
-%hook SBVolumeHardwareButton
+%hook SBHUDController
 
-- (void)volumeIncreasePress:(id)arg1 {
-	NVAHVolumeHook(self, _cmd, arg1, (IMP)&%orig);
+- (void)_presentHUD:(id)arg1 animated:(BOOL)arg2 {
+	if (!NVAHShouldDisableVolumeControl()) %orig;
 }
 
-- (void)volumeDecreasePress:(id)arg1 {
-	NVAHVolumeHook(self, _cmd, arg1, (IMP)&%orig);
+%end
+
+%hook SBVolumeControl
+
+- (float)volumeStepDown {
+	return NVAHShouldDisableVolumeControl() ? 0.0 : %orig;
+}
+
+- (float)volumeStepUp {
+	return NVAHShouldDisableVolumeControl() ? 0.0 : %orig;
 }
 
 %end
